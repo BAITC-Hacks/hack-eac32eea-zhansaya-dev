@@ -1,0 +1,14 @@
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+.env*
+!.env.example
+.DS_Store
+# Local credentials and private signing keys
+secrets/
+credentials.json
+*.pem
+*.key
+*.p12
+*.pfx
