@@ -40,6 +40,8 @@ export interface ReadinessRating {
 }
 
 export interface Challenge {
+  /** Explicitly labeled user-approved demonstration draft. */
+  demoData?: boolean;
   id: string;
   draftDescription: string;
   businessName?: string;

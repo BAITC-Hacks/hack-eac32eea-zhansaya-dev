@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { readDrafts, saveDraft, publishChallenge } from "@/lib/draft-storage";
+import { openCafeteriaDemo } from "@/lib/demo-draft";
 import { TaskCardPanel } from "./task-card-panel";
 import { ClarificationPanel } from "./clarification-panel";
 import type { Challenge } from "@/types/challenge";
@@ -71,6 +72,17 @@ export function DraftWorkspace() {
     setEditing(true);
   }
 
+  function openDemo() {
+    try {
+      const demo = openCafeteriaDemo();
+      setDrafts(readDrafts());
+      openDraft(demo);
+      setNotice("demo data — user-provided description only. No questions or answers were prefilled.");
+    } catch {
+      setError("Could not open demo data. Existing drafts were not replaced. Check browser storage and retry.");
+    }
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setNotice("");
@@ -123,15 +135,19 @@ export function DraftWorkspace() {
             <p className="mt-2 text-xs leading-5 text-muted">Return to Create a Challenge to find these again.</p>
             {drafts.length === 0 ? <p className="my-5 text-sm text-muted">Your first draft will appear here.</p> : (
               <ul className="my-5 space-y-2">
-                {drafts.map((draft) => <li key={draft.id}><button type="button" disabled={editing || aiBusy || cardBusy} aria-pressed={selected?.id === draft.id} onClick={() => openDraft(draft)} className={`w-full rounded-lg border p-3 text-left text-sm disabled:cursor-not-allowed disabled:opacity-60 ${selected?.id === draft.id ? "border-ink/30 bg-white" : "border-transparent hover:bg-white/70"}`}><span className="line-clamp-2 break-words whitespace-pre-wrap">{draft.draftDescription}</span><span className="mt-2 block text-xs text-muted">{draft.status === "published" ? "Published" : "Draft"} · {new Date(draft.createdAt).toLocaleDateString()}</span></button></li>)}
+                {drafts.map((draft) => <li key={draft.id}><button type="button" disabled={editing || aiBusy || cardBusy} aria-pressed={selected?.id === draft.id} onClick={() => openDraft(draft)} className={`w-full rounded-lg border p-3 text-left text-sm disabled:cursor-not-allowed disabled:opacity-60 ${selected?.id === draft.id ? "border-ink/30 bg-white" : "border-transparent hover:bg-white/70"}`}>{draft.demoData && <span className="mb-1 block text-xs font-bold">demo data</span>}<span className="line-clamp-2 break-words whitespace-pre-wrap">{draft.draftDescription}</span><span className="mt-2 block text-xs text-muted">{draft.status === "published" ? "Published" : "Draft"} · {new Date(draft.createdAt).toLocaleDateString()}</span></button></li>)}
               </ul>
             )}
             <button type="button" onClick={newDraft} disabled={editing || aiBusy || cardBusy} className="mt-3 text-sm font-semibold underline underline-offset-4 disabled:cursor-not-allowed disabled:opacity-50">+ New draft</button>
+            <button type="button" onClick={openDemo} disabled={aiBusy || cardBusy || (editing && (!!selected || !!description || !!businessName || !!contact))} className="mt-4 block text-sm font-semibold underline disabled:opacity-50">Open cafeteria demo data</button>
+            <p className="mt-2 text-xs leading-5 text-muted">Creates a labeled draft with only the supplied problem description. No prefilled AI questions or business answers.</p>
             {editing && drafts.length > 0 && <p className="mt-3 text-xs leading-5 text-muted">Save or cancel your changes before switching drafts.</p>}
           </aside>
 
           <div className="min-w-0 rounded-2xl border border-ink/10 bg-white p-6 sm:p-8">
             <p role="status" className="text-sm font-semibold text-[#466334]">{notice}</p>
+            {selected?.demoData && <p className="mt-3 text-sm font-bold">demo data</p>}
+            {!editing && error && <p role="alert" className="mt-3 text-sm text-red-800">{error}</p>}
             {editing ? (
               <form onSubmit={handleSubmit} noValidate>
                 <h2 className="text-2xl font-semibold tracking-tight">{selected ? "Edit your draft" : "Describe your challenge"}</h2>

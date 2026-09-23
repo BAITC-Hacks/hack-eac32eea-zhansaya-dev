@@ -9,6 +9,7 @@ function isDraft(value: unknown): value is Challenge {
   const draft = value as Record<string, unknown>;
   return typeof draft.id === "string" && draft.id.length > 0
     && typeof draft.draftDescription === "string"
+    && (draft.demoData === undefined || typeof draft.demoData === "boolean")
     && (draft.status === "draft" || draft.status === "published")
     && (draft.status !== "published" || isPublishedSnapshot(draft.publishedSnapshot, draft.id, draft.publishedAt))
     && (draft.taskCardCreatedAt === undefined || (typeof draft.taskCardCreatedAt === "string" && Number.isFinite(Date.parse(draft.taskCardCreatedAt))))

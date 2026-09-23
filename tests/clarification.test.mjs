@@ -292,3 +292,19 @@ test('milestone validation, failed writes, missing references and corrupt storag
  }
  data.set('ai-sana.project-milestones.v1',raw);data.delete('ai-sana.challenge-drafts.v1');assert.throws(()=>milestones.readMilestones());await assert.rejects(milestones.confirmMilestone('two','accepted','Done'));assert.equal(data.get('ai-sana.project-milestones.v1'),raw);
 });
+
+test('opt-in demo contains only approved description, persists its label, and preserves edits and other drafts',()=>{
+ const data=new Map();let blocked=false;
+ const globals={window:{localStorage:{getItem:key=>data.get(key)??null,setItem:(key,value)=>{if(blocked)throw Error('Full');data.set(key,value);}}}};
+ const cards=load('src/lib/task-card.ts');
+ const storage=load('src/lib/draft-storage.ts',globals,{'@/lib/clarification':validation,'@/lib/task-card':cards});
+ const demo=load('src/lib/demo-draft.ts',globals,{'@/lib/draft-storage':storage});
+ assert.equal(data.size,0);
+ const now=new Date().toISOString();storage.saveDraft({id:'existing',draftDescription:'Existing user text',status:'draft',createdAt:now,updatedAt:now,clarificationQuestions:[],taskCard:{}});
+ const first=demo.openCafeteriaDemo();assert.equal(first.draftDescription,description);assert.equal(first.demoData,true);assert.equal(first.status,'draft');
+ assert.equal(first.clarificationQuestions.length,0);assert.equal(Object.keys(first.taskCard).length,0);assert.equal(first.businessName,undefined);assert.equal(first.contactNameOrEmail,undefined);assert.equal(first.confirmation,undefined);assert.equal(first.publishedSnapshot,undefined);
+ demo.openCafeteriaDemo();assert.equal(storage.readDrafts().length,2);
+ storage.saveDraft({...first,draftDescription:'User edit'});assert.equal(demo.openCafeteriaDemo().draftDescription,'User edit');assert.equal(storage.readDrafts().find(d=>d.id==='existing').draftDescription,'Existing user text');assert.equal(storage.readDrafts().find(d=>d.id===first.id).demoData,true);
+ data.clear();blocked=true;assert.throws(()=>demo.openCafeteriaDemo());assert.equal(data.size,0);blocked=false;
+ data.set('ai-sana.challenge-drafts.v1','invalid');assert.throws(()=>demo.openCafeteriaDemo());assert.equal(data.get('ai-sana.challenge-drafts.v1'),'invalid');
+});
