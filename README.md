@@ -1,3 +1,5 @@
+**Работающий MVP:** [AI Sana Challenge Hub](https://ai-sana-challenge-hub.vercel.app/) — открывается без авторизации.
+
 # hack-eac32eea-zhansaya-dev
 Hackathon team repository for zhansaya-dev
 
